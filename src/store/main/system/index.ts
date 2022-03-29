@@ -6,16 +6,31 @@ const systemModule: Module<ISystemState, IRootState> = {
   namespaced: true,
   state() {
     return {
-      userCount: 0,
-      userList: []
+      usersCount: 0,
+      usersList: [],
+      roleList: [],
+      roleCount: 0
     }
   },
   mutations: {
-    changeUserList(state, userList: any[]) {
-      state.userList = userList
+    changeUsersList(state, userList: any[]) {
+      state.usersList = userList
     },
-    changeUserCount(state, userCount: number) {
-      state.userCount = userCount
+    changeUsersCount(state, userCount: number) {
+      state.usersCount = userCount
+    },
+    changeRoleList(state, list: any[]) {
+      state.roleList = list
+    },
+    changeRoleCount(state, count: number) {
+      state.roleCount = count
+    }
+  },
+  getters: {
+    pageListData(state) {
+      return (pageName: string) => {
+        return (state as any)[`${pageName}List`]
+      }
     }
   },
   actions: {
@@ -24,12 +39,16 @@ const systemModule: Module<ISystemState, IRootState> = {
       // 发送请求
       // 1.对页面发送请求
       const pageResult = await getPageListData(
-        payload.pageUrl,
+        `/${payload.pageName}/list`,
         payload.queryInfo
       )
+      // console.log(pageResult)
+
       const { list, totalCount } = pageResult.data
-      commit('changeUserList', list)
-      commit('changeUserCount', totalCount)
+      const changePageName =
+        payload.pageName.slice(0, 1).toUpperCase() + payload.pageName.slice(1)
+      commit(`change${changePageName}List`, list)
+      commit(`change${changePageName}Count`, totalCount)
     }
   }
 }
