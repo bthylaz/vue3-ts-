@@ -1,6 +1,11 @@
 <template>
   <div class="page-content">
-    <by-table v-bind="contentTableConfig" :listData="dataList">
+    <by-table
+      v-bind="contentTableConfig"
+      :listData="dataList"
+      v-model:page="pageInfo"
+      :listCount="listCount"
+    >
       <template #headerHandler>
         <el-button size="medium" type="primary"> 新建用户 </el-button>
       </template>
@@ -27,7 +32,7 @@
 </template>
 
 <script setup lang="ts">
-import { computed, defineProps } from 'vue'
+import { computed, defineProps, defineExpose, ref, watch } from 'vue'
 import { useStore } from '@/store'
 import byTable from '@/base-ui/table'
 
@@ -41,16 +46,33 @@ const props = defineProps({
     required: true
   }
 })
-const store = useStore()
-store.dispatch('system/getPageListAction', {
-  pageName: props.pageName,
-  queryInfo: {
-    offset: 0,
-    size: 10
-  }
+defineExpose({
+  getPageData
 })
+
+const pageInfo = ref({
+  currentPage: 0,
+  pageSize: 10
+})
+watch(pageInfo, () => getPageData())
+const store = useStore()
+function getPageData(data: any = {}) {
+  store.dispatch('system/getPageListAction', {
+    pageName: props.pageName,
+    queryInfo: {
+      offset: pageInfo.value.pageSize * pageInfo.value.currentPage,
+      size: pageInfo.value.pageSize,
+      ...data
+    }
+  })
+}
+getPageData()
+
 const dataList = computed(() =>
   store.getters['system/pageListData'](props.pageName)
+)
+const listCount = computed(() =>
+  store.getters['system/pageListCount'](props.pageName)
 )
 </script>
 
